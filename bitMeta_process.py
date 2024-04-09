@@ -11,7 +11,7 @@ from choose import *
 from mesudo import *
 from register import *
 from login import *
-import threading
+import multiprocessing
 
 
 # import # pprint 
@@ -102,40 +102,33 @@ myDB = mySqlDB()
 
 prevNow = datetime.datetime.now() 
 form_mainWin = uic.loadUiType("./res/window8.ui")[0]
-class WorkerThread(QThread):
-    finished = pyqtSignal()
-    def __init__(self):
+class WorkerProcess(multiprocessing.Process):
+    def __init__(self, result_queue):
         super().__init__()
-        self.stopped = False
-    def run(self):
-        while not self.stopped:
-            # 스레드에서 수행할 작업을 여기에 작성합니다.
-            try:
-                # startTime = time.time()
-                global mCurrentInterPrice, mAvgMesuPrice, mTotJasan
-                global myInterestBalance,mKrwBalance, mKrwBalance4Buy, mBool_login                                
-                mCurrentInterPrice =  pyupbit.get_current_price(myInterest)
-                time.sleep(0.007)
-                myInterestBalance = myUpbit.get_balance(myInterest) #matic 잔고 가져오기 모두
-                time.sleep(0.007)
-                mKrwBalance = round(myUpbit.get_balance("KRW"),4) #원화 잔고 가져오기   
-                time.sleep(0.007)                
-                mAvgMesuPrice = myUpbit.get_avg_buy_price(myInterest)                
-                # print(f'Debugging mAvgMesuPrice{mAvgMesuPrice} mKrwBalanceP{mKrwBalance} myInterestBalance{myInterestBalance} mCurrentInterPrice{mCurrentInterPrice}')
-                # endTime=time.time()
-                # 실행 시간 계산
-                # executionTime = endTime - startTime
-                # print(f"Debugging 실행 시간: {executionTime} 초")
+        self.result_queue = result_queue
+        self.stopped = multiprocessing.Event()
 
+    def run(self):
+        while not self.stopped.is_set():
+            try:
+                # 여러 정보 조회
+                current_price = pyupbit.get_current_price("KRW-BTC")
+                other_data = "여기에 다른 데이터"
+                # 딕셔너리로 그룹화
+                result = {
+                    'current_price': current_price,
+                    'other_data': other_data,
+                }
+                # 결과 큐에 넣기
+                self.result_queue.put(result)
+                time.sleep(1)
             except Exception as e:
-                print(e)                
-            # time.sleep(0.2)            
+                print(f"WorkerProcess Error: {e}")
 
     def stop(self):
-        self.stopped = True
-    def restart(self):
-        self.stopped = False
-        self.start()
+        self.stopped.set()
+
+
 class MyWindow(QMainWindow, form_mainWin):
     def __init__(self):
         
@@ -181,16 +174,21 @@ class MyWindow(QMainWindow, form_mainWin):
         #메뉴연결
         self.actionRegister.triggered.connect(self.actionRegisterFunc)
         self.actionLogin.triggered.connect(self.loginDlg) 
-        self.actionStop.triggered.connect(self.logoutFunction)
+        self.actionStop.triggered.connect(self.logout)
         self.actionBTasking.triggered.connect(self.actionCoinSelect)
         self.actionaBot.triggered.connect(self.actionaBotTasking)
 
+        # 결과 큐 생성
+        self.result_queue = multiprocessing.Queue()
+        # 백그라운드 프로세스를 관리할 인스턴스 변수 초기화
+        self.worker_process = None
+
         #타이머 셋팅
-        self.timer = QTimer(self)        
+        self.timer = QTimer(self)
+        self.result_timer.timeout.connect(self.process_results)        
         self.timer.timeout.connect(self.timerEvent)
 
-        # WorkerThread 인스턴스 생성
-        self.worker_thread = WorkerThread()
+        
 
 
         self.botSendmsg('+++++++++++++++++++++++++++++++++++++')
@@ -199,10 +197,19 @@ class MyWindow(QMainWindow, form_mainWin):
         self.botSendmsg('+++++++++++++++++++++++++++++++++++++')
         self.botSendmsg('+info+' + '메뉴-업비트-로그인 하세요')        
         return
+    def process_results(self):
+        # 결과 큐에서 결과를 가져와서 처리
+        while not self.result_queue.empty():
+            result = self.result_queue.get()
+            # dspCurrent 메소드를 수정하여 결과 딕셔너리를 인자로 받도록 하고, 이를 활용
+            self.dspCurrent(result)
+
     def closeEvent(self, event):
-        # 프로그램이 종료될 때 WorkerThread 종료
-        self.worker_thread.stop()
-        event.accept()
+        # 프로그램 종료 시 백그라운드 프로세스 종료
+        if self.worker_process:
+            self.worker_process.stop()
+            self.worker_process.join()
+        super().closeEvent(event)
 
     def jugiActivated(self,text):    
         global mJugiMinute                   
@@ -304,9 +311,16 @@ class MyWindow(QMainWindow, form_mainWin):
                     mBool_login = True                
                     self.botSendmsg(f"{session['id']}가 종목 {session['myinterest1']} : 로그인 되었습니다.")
                     self.lineEdit_idInfo.setText(f"{session['id']} - {session['username']}")                
-                    # WorkerThread 실행
-                    # self.worker_thread.start()
-                    self.worker_thread.restart()
+                    if self.worker_process is not None:
+                        self.worker_process.stop()
+                        self.worker_process.join()
+                    
+                    # 새로운 백그라운드 프로세스 시작
+                    self.worker_process = WorkerProcess(self.result_queue)
+                    self.worker_process.start()
+                    
+                    # 결과 처리 타이머 재시작
+                    self.result_timer.start(nTimerEvent)
                     # TimerStart
                     self.timer.start(nTimerEvent)
                     return mBool_login
@@ -323,15 +337,20 @@ class MyWindow(QMainWindow, form_mainWin):
             self.botSendmsg('지정된 Ticker 가 없습니다. 지정하세요')
             return False
     
-    def logoutFunction(self):
+    def logout(self):
         global mBool_login
         global session
         if self.chkLoginFirst() == False :
             return
         
-        # Thread & Timer Stop 
-        self.worker_thread.stop()
-        self.timer.stop()
+        # Process & Timer Stop 
+        if self.worker_process is not None:
+            self.worker_process.stop()
+            self.worker_process.join()
+            self.worker_process = None  # 프로세스 참조 제거        
+            self.timer.stop()
+            # 자동 업데이트 타이머 중지
+            self.result_timer.stop()
 
         mBool_login = False
         session[0] = ''        
@@ -568,7 +587,7 @@ class MyWindow(QMainWindow, form_mainWin):
         except Exception as e:
             print(e)
             self.botSendmsg(f"cal_target 애러 발생 {e}")
-            self.logoutFunction()        
+            self.logout()        
         return
             
     def makeInstance(self):
@@ -590,7 +609,8 @@ class MyWindow(QMainWindow, form_mainWin):
             return False
         return True
     
-    def dspCurrent(self): 
+    def dspCurrent(self, result): 
+        # result에 그러니까 duple로 데이터가 들어 있다. 
         try:               
             self.lbl_upbitInterest.setText(myInterest) #나으 거래 코인            
             
