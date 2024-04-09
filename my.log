@@ -1,0 +1,14 @@
+2023-02-02 01:44:16,357 - root - INFO - 1 로그 
+2023-02-02 01:44:16,479 - root - INFO - 2 로그 
+2023-02-02 01:44:16,481 - root - INFO - 3 로그 
+2023-02-02 01:44:16,489 - root - INFO - 4 로그 
+2023-02-02 01:44:16,494 - root - INFO - 5 로그 
+2023-02-02 01:44:16,562 - root - INFO - 6 로그 
+2023-02-02 01:44:16,804 - root - INFO - 7 로그 
+2023-02-02 01:44:27,712 - root - INFO - 매수 버튼을 누름 로그 36102.67만큼 매입 진.
+2023-02-02 01:44:27,828 - root - INFO - 매수를 완료함 로그 
+2023-02-02 01:44:27,830 - root - INFO - pprint 로그 
+2023-02-02 01:44:27,836 - root - INFO - after pprint 로그 
+2023-02-02 01:44:27,840 - root - INFO - after mMesu 
+2023-02-02 01:44:27,841 - root - INFO - mesuSendMsg{'uuid': 'a64293b1-4ea7-4515-8586-fe2f0462d805', 'side': 'bid', 'ord_type': 'price', 'price': '36102', 'state': 'wait', 'market': 'KRW-MATIC', 'created_at': '2023-02-02T01:44:27.8149+09:00', 'reserved_fee': '18.051', 'remaining_fee': '18.051', 'paid_fee': '0', 'locked': '36120.051', 'executed_volume': '0', 'trades_count': 0}
+2023-02-02 01:44:27,846 - root - INFO - after mesuSendMsg 로그 

@@ -1,0 +1,119 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<ui version="4.0">
+ <class>Form</class>
+ <widget class="QWidget" name="Form">
+  <property name="geometry">
+   <rect>
+    <x>0</x>
+    <y>0</y>
+    <width>225</width>
+    <height>363</height>
+   </rect>
+  </property>
+  <property name="windowTitle">
+   <string>Form</string>
+  </property>
+  <widget class="QTableWidget" name="tableWidget">
+   <property name="geometry">
+    <rect>
+     <x>0</x>
+     <y>0</y>
+     <width>211</width>
+     <height>361</height>
+    </rect>
+   </property>
+   <property name="font">
+    <font>
+     <pointsize>10</pointsize>
+    </font>
+   </property>
+   <property name="frameShape">
+    <enum>QFrame::StyledPanel</enum>
+   </property>
+   <property name="frameShadow">
+    <enum>QFrame::Raised</enum>
+   </property>
+   <property name="alternatingRowColors">
+    <bool>true</bool>
+   </property>
+   <property name="gridStyle">
+    <enum>Qt::SolidLine</enum>
+   </property>
+   <row>
+    <property name="text">
+     <string>KRW투자비율(%)</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>코빗시세</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>빗썸시세</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>UPBIT시세</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>적용변동율(%)</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>매수Target가</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>현보유수량</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>최종매입가</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>평균매수가</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>현재수익률(%)</string>
+    </property>
+   </row>
+   <row>
+    <property name="text">
+     <string>이동평균수익률(%)</string>
+    </property>
+   </row>
+   <column>
+    <property name="text">
+     <string>내용</string>
+    </property>
+    <property name="font">
+     <font>
+      <family>맑은 고딕</family>
+      <pointsize>11</pointsize>
+     </font>
+    </property>
+    <property name="background">
+     <color>
+      <red>255</red>
+      <green>170</green>
+      <blue>127</blue>
+     </color>
+    </property>
+   </column>
+  </widget>
+ </widget>
+ <resources/>
+ <connections/>
+</ui>
